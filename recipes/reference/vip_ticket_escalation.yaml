@@ -1,0 +1,10 @@
+name: vip_ticket_escalation
+trigger: {app: tickets, event: ticket.created, filter: "trigger.priority == 'high'"}
+steps:
+  - id: customer
+    action: billing.find_customer
+    inputs: {email: "{{trigger.requester_email}}"}
+  - id: post
+    if: "steps.customer is not null"
+    action: chat.post_message
+    inputs: {channel: escalations, text: "Escalate {{trigger.title}} for {{trigger.requester_email}}"}

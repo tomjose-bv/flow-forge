@@ -1,0 +1,6 @@
+name: big_wins_shoutout
+trigger: {app: crm, event: deal.stage_changed, filter: "trigger.deal.stage == 'won' and trigger.deal.amount >= 8000"}
+steps:
+  - id: post
+    action: chat.post_message
+    inputs: {channel: wins, text: "We won {{trigger.deal.name}}!"}

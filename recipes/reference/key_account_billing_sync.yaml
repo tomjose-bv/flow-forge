@@ -1,0 +1,10 @@
+name: key_account_billing_sync
+trigger: {app: crm, event: contact.created, filter: "trigger.company in ['Bluebird', 'Granite']"}
+steps:
+  - id: customer
+    action: billing.find_customer
+    inputs: {email: "{{trigger.email}}"}
+  - id: create
+    if: "steps.customer is null"
+    action: billing.create_customer
+    inputs: {name: "{{trigger.name}}", email: "{{trigger.email}}"}

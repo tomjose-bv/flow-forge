@@ -1,0 +1,13 @@
+name: key_account_billing_sync
+description: 'Keep billing in sync with new CRM contacts from our key accounts.
+
+  '
+seed: 30
+apps: [crm, billing]
+world: {contacts: 6, billing_customers: 2}
+events:
+- {type: contact.created, count: 24}
+ambiguous: true
+clarifications: {key account|which|compan|account: Key accounts are the companies Bluebird and Granite.,
+  sync|what|do|create|how|exist: 'Create the billing customer with the contact''s name and email, unless
+    one with that email already exists.'}

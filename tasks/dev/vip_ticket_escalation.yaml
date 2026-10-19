@@ -1,0 +1,18 @@
+name: vip_ticket_escalation
+description: 'Make sure urgent tickets from important customers get attention.
+
+  '
+seed: 28
+apps: [tickets, billing, chat]
+world:
+  contacts: 8
+  billing_customers: 4
+  channels: [escalations, support]
+events:
+- type: ticket.created
+  count: 14
+  priorities: {high: 7, normal: 5, low: 2}
+ambiguous: true
+clarifications: {important|vip|which customers|key|who: Important customers are requesters whose email
+    exists as a billing customer., urgent|priority|which tickets: Only tickets with priority high., attention|what|do|action|how|notify|channel|message: 'Post
+    to #escalations: Escalate <title> for <requester email>'}

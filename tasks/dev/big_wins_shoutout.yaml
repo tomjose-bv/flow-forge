@@ -1,0 +1,16 @@
+name: big_wins_shoutout
+description: 'Tell the team whenever we win a big deal.
+
+  '
+seed: 27
+apps: [crm, chat]
+world:
+  contacts: 8
+  channels: [wins, sales, general]
+events:
+- type: deal.stage_changed
+  count: 16
+  stages: {won: 10, lost: 3, proposal: 3}
+ambiguous: true
+clarifications: {amount|big|threshold|how much|size|value: Big means an amount of 8000 or more., channel|where|which team|post: 'Post
+    in the #wins channel.', text|message|format|say|wording|content: 'Use exactly: We won <deal name>!'}

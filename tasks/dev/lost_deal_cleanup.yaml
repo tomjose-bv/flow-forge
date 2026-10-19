@@ -1,0 +1,14 @@
+name: lost_deal_cleanup
+description: 'Handle lost deals properly in the CRM.
+
+  '
+seed: 29
+apps: [crm]
+world: {contacts: 6}
+events:
+- type: deal.stage_changed
+  count: 12
+  stages: {won: 4, lost: 6, proposal: 2}
+ambiguous: true
+clarifications: {handle|what|do|properly|action|note: 'Set the deal''s note to exactly: Closed lost. Nothing
+    else.', which|all|deals|filter|amount: Every deal that moves to lost.}

@@ -72,6 +72,9 @@
   effects computed without) and reports faults_injected. Lost-response retries reuse the
   idempotency key, so no duplicates; without a key they duplicate (tested). Faults added to
   3 dev tasks; references still perfect. 120 tests passing.
+- M4.2a 4 ambiguous dev tasks (big_wins_shoutout, vip_ticket_escalation, lost_deal_cleanup,
+  key_account_billing_sync) with `ambiguous: true` and scripted `clarifications` {keyword
+  regex: answer}; reference recipes follow the answers and are perfect. 20 dev tasks total.
 
 ## Ideas for later
 
@@ -85,9 +88,9 @@ user before creating it.
 
 ## Next step
 
-Milestone 4, step 2: ambiguous tasks + graph+clarify. Add 4 ambiguous dev tasks (e.g. 'tell
-the team about big wins' - threshold, channel and text unspecified) with `ambiguous: true`
-and scripted `clarifications` {keyword regex: answer}; reference recipes follow the answers.
-ScriptedUser answers QUESTION lines by keyword (else 'Use your judgment'); graph+clarify
-asks up to 3 questions before the graph loop; AgentResult.questions counted. Tests with
-FakeLLM.
+Milestone 4, step 2b: ScriptedUser (answers QUESTION lines by regex keyword match on
+task.clarifications; else 'The description is all there is; use your judgment.'; for non-
+ambiguous tasks: 'The description is complete; follow it exactly.') and `graph+clarify`
+agent: one turn asking up to 3 questions (or READY), answers appended to the context, then
+the graph loop (add an `extra` context parameter to run_graph). AgentResult.questions. CLI
+variant. Tests with FakeLLM. Then milestone 5 (README, CI, run script, report, real runs).
