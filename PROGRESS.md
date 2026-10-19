@@ -61,6 +61,11 @@
   --variant prompt|probe` with per-task crash isolation, result.json and summary.json
   (machine/date/model/seed). 114 tests passing. **Milestone 2 done** (real-model smoke run
   pending while connector-forge benchmarks use Ollama).
+- M3.1 `graph` agent: inspection turns, then up to 4 rounds of write -> validation errors or
+  practice dry run -> fix; when the dry run is clean (no failed events, no replay
+  duplicates) the model self-checks the produced effects against the description and replies
+  DONE or a fix; best recipe kept (fewest failures/duplicates, latest on ties). CLI
+  `--variant graph`. 117 tests passing.
 
 ## Ideas for later
 
@@ -74,8 +79,7 @@ user before creating it.
 
 ## Next step
 
-Milestone 3, step 1: graph agent in agents.py: inspect turn (probe_turns) -> write ->
-[validation errors -> fix] -> dry_run -> self-check against the description -> fix, up to 4
-rounds; context kept small (contract + catalog + task + current recipe + last tool output);
-final = last valid recipe whose dry run had no failed events (else last valid). Tests with
-FakeLLM.
+Milestone 4, step 1: failure injection. Apps get fail_plan: {action: [status, ...]} consumed
+per call (e.g. 503, 503 -> success; 429 with Retry-After), and tasks get optional `faults`.
+Harness reports correctness under faults (effects must still match, no duplicates from
+retries). Reference recipes must still be perfect with faults on. Tests.

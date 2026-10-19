@@ -49,3 +49,32 @@ def test_probe_agent_turn_limit(tmp_path):
     llm = FakeLLM(["SAMPLE crm"] * 3 + ["thinking", FENCED])
     r = run_probe(TASK, llm, tmp_path, REF, max_turns=3)
     assert r.llm_calls == 5 and r.report["success"]
+
+
+def test_graph_fixes_invalid_then_stops_on_done(tmp_path):
+    from flow_forge.agents import run_graph
+
+    bad = FENCED.replace("crm.get_contact", "crm.get_person")
+    llm = FakeLLM([bad, FENCED, "DONE"])
+    r = run_graph(TASK, llm, tmp_path, REF)
+    assert r.report["success"] and r.rounds == 2 and r.llm_calls == 3
+    assert "get_person" in llm.seen[1][1]["content"] and "invalid" in llm.seen[1][1]["content"]
+    assert "Compare them with the task description" in llm.seen[2][1]["content"]
+    assert "practice run" in llm.seen[2][1]["content"]
+
+
+def test_graph_keeps_best_recipe(tmp_path):
+    from flow_forge.agents import run_graph
+
+    worse = FENCED.replace('    if: "steps.customer is null"\n', "")  # fails or duplicates
+    llm = FakeLLM(["SAMPLE crm", FENCED, worse, "no recipe here", worse])
+    r = run_graph(TASK, llm, tmp_path, REF, rounds=4)
+    assert r.report["success"]
+    assert (tmp_path / "recipe.yaml").read_text() == REF
+
+
+def test_graph_without_any_recipe(tmp_path):
+    from flow_forge.agents import run_graph
+
+    r = run_graph(TASK, FakeLLM(["hmm"] * 10), tmp_path, REF, rounds=2)
+    assert r.report is None and r.error == "no recipe was written"

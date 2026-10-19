@@ -146,4 +146,70 @@ def run_probe(task: Task, llm: LLM, run_dir: Path, reference: str, max_turns: in
     return _finish("probe", task, llm, tb, started, 1, reference, error=out if out.startswith("error") else None)
 
 
-AGENTS = {"prompt": run_prompt, "probe": run_probe}
+
+
+FIX_PROMPT = """Your current recipe:
+```yaml
+{recipe}
+```
+
+Result of the last check:
+{result}
+
+{instruction}"""
+
+FIX_INVALID = "Fix every problem listed. Reply with the complete corrected recipe in a ```yaml block."
+SELF_CHECK = ("These are the effects your recipe had on practice data. Compare them with the task description: the "
+              "exact texts, which events must be ignored, and that nothing extra happens. If they are exactly right, "
+              "reply only DONE. Otherwise reply with the complete corrected recipe in a ```yaml block.")
+
+
+def _rank(dry_run: str) -> tuple[int, int]:
+    """Lower is better: (failed events, replay duplicates) parsed from a dry_run summary."""
+    m = re.search(r"(\d+) failed", dry_run)
+    d = re.search(r"created (\d+) duplicate", dry_run)
+    return (int(m.group(1)) if m else 99, int(d.group(1)) if d else 0)
+
+
+def run_graph(task: Task, llm: LLM, run_dir: Path, reference: str, rounds: int = 4, n: int = 4) -> AgentResult:
+    """Fixed plan: inspect -> write -> (validate -> dry run -> self-check -> fix) x rounds."""
+    started = time.monotonic()
+    limits = {"read_task": 1, "read_catalog": 1, "sample_events": n, "call_readonly": n,
+              "write_recipe": rounds + 1, "dry_run": rounds + 1, "submit": 1}
+    tb = ToolBox(task, run_dir, limits=limits)
+    context = _context(tb)
+    messages = _messages(CONTRACT + "\n\n" + PROBE_HELP.replace("{n}", str(n)),
+                         context + "\n\nInspect if useful, then write the recipe.")
+    reply = probe_turns(tb, llm, messages, max_turns=2, n=n)
+    best: tuple[tuple[int, int], int, str] | None = None  # (rank, -round, recipe text)
+    used, error = 0, None
+    recipe_text = ""
+    for used in range(1, rounds + 1):
+        out = _write(tb, reply)
+        if out.startswith("error"):
+            result, instruction = out, FIX_INVALID
+        elif "invalid" in out:
+            recipe_text = tb.recipe_path.read_text(encoding="utf-8")
+            result, instruction = out, FIX_INVALID
+        else:
+            recipe_text = tb.recipe_path.read_text(encoding="utf-8")
+            result = tb.call("dry_run")
+            rank = _rank(result)
+            if best is None or (rank, -used) < (best[0], best[1]):
+                best = (rank, -used, recipe_text)
+            instruction = SELF_CHECK if rank == (0, 0) else FIX_INVALID.replace(
+                "Fix every problem listed", "Fix the failed events and duplicates, then check the effects")
+        if used == rounds:
+            break
+        reply = llm.chat(_messages(CONTRACT, context + "\n\n" + FIX_PROMPT.format(
+            recipe=recipe_text or "(none yet)", result=result, instruction=instruction)))
+        if extract_recipe(reply) is None and "DONE" in reply.upper():
+            break
+    if best is not None:
+        tb.recipe_path.write_text(best[2], encoding="utf-8")
+    elif not tb.recipe_path.exists():
+        error = "no recipe was written"
+    return _finish("graph", task, llm, tb, started, used, reference, error=error)
+
+
+AGENTS = {"prompt": run_prompt, "probe": run_probe, "graph": run_graph}

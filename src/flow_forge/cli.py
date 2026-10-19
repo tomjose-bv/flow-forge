@@ -110,7 +110,7 @@ def main(argv: list[str] | None = None) -> int:
     ev.add_argument("--out", help="write a JSON report here")
     ev.add_argument("--root", default=".")
     ag = sub.add_parser("agent", help="run an AI agent on tasks (needs Ollama)")
-    ag.add_argument("--variant", required=True, choices=("prompt", "probe"))
+    ag.add_argument("--variant", required=True, choices=("prompt", "probe", "graph"))
     ag.add_argument("--set", choices=("dev", "heldout"), default="dev")
     ag.add_argument("--task", action="append", help="limit to this task (repeatable)")
     ag.add_argument("--model", default="qwen2.5-coder:3b")
