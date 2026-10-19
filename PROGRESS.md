@@ -45,6 +45,10 @@
 - M1.9 5 held-out tasks in tasks/heldout/ with reference recipes in
   recipes/reference/heldout/ (never shown to agents), committed before any agent code. All
   references perfect; filters discriminate. 94 tests passing.
+- M1.10 `catalog.py` (Markdown catalog from app specs: triggers, actions with
+  inputs/types/enums, object shapes, recipe format + expression cheat sheet; no reference
+  recipes) and CLI `flow-forge eval` / `flow-forge catalog`. Employer-terms checks clean
+  (tree + history). 99 tests passing. **Milestone 1 done.**
 
 ## Ideas for later
 
@@ -58,9 +62,10 @@ user before creating it.
 
 ## Next step
 
-Milestone 1, step 10 (last of M1): app catalog + CLI. `src/flow_forge/catalog.py` renders
-Markdown docs of the task's apps from ActionSpec/TriggerSpec (triggers + data shape, actions
-+ inputs/types/enums/required + output, recipe format and expression cheat sheet) - the only
-app info agents get; CLI `flow-forge eval --set dev|heldout [--task X] [--recipe-dir DIR]
-[--out f.json]` scoring a directory of recipes against the references. Then employer-terms
-checks; mark milestone 1 done.
+Milestone 2, step 1: LLM client (copy the pattern from connector-forge llm.py: OllamaClient,
+FakeLLM, extract a ```yaml block) and agent tools behind a guard: ToolBox(task) with
+read_task, read_catalog, sample_events(app, n) (from a probe world built with a different
+seed, so agents never see the test events), call_readonly(app.action, inputs) (non-writing
+actions only), write_recipe(yaml) (parse + validate, return errors), dry_run() (evaluate
+against the reference on the probe world? NO: run on the probe world and return the run log
+only, not the expected effects), submit. Per-tool limits, every call logged.
