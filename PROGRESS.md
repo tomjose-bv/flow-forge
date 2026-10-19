@@ -31,6 +31,11 @@
   deterministic contacts, billing customers (some with differently-cased emails), channels,
   tickets, and deal/contact/ticket/invoice event streams with increasing timestamps. 66
   tests passing.
+- M1.7 `harness.py`: canonical effects (ids replaced by natural keys; text case/space-
+  insensitive; amounts to the cent) as a multiset; evaluate(task, recipe, reference) ->
+  Report (valid + validation errors, success, precision, recall, duplicates on full replay,
+  events ok/filtered/failed, examples of missing/unexpected effects, event errors, API
+  calls). 72 tests passing.
 
 ## Ideas for later
 
@@ -44,10 +49,10 @@ user before creating it.
 
 ## Next step
 
-Milestone 1, step 7: harness. `src/flow_forge/harness.py`: effects(apps, initial) =
-canonical created/changed objects per app (ids replaced by natural keys: customers by email,
-invoices by (customer email, external_ref, amount, currency, memo), messages by (channel,
-text), tickets by (title, priority, requester), deal changes by (deal id, stage, note));
-evaluate(task, recipe_text): build world twice, run reference and candidate recipes via
-AppServer+engine, compare effects -> precision, recall, success, duplicates after a replay,
-failed/filtered event counts, validation errors. Tests with an inline reference recipe.
+Milestone 1, step 8: dev tasks. Write ~16 task YAMLs in tasks/dev/ with a hand-written
+reference recipe each in recipes/reference/<task>.yaml, from simple (deal won -> chat
+message) to multi-step (lookup + create-if-missing + invoice + message; ticket priority
+routing; for_each over tags; currency filters; invoice paid -> update deal note).
+Descriptions must state every exact text/format the checks depend on. Test: every reference
+recipe is valid and evaluate(task, ref, ref).success, with expected > 0 and at least one
+filtered event where a filter exists. Start with 6 tasks.
