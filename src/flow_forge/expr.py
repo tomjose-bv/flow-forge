@@ -275,6 +275,26 @@ def evaluate(src: str, ctx: dict[str, Any]) -> Any:
     return _Parser(src, ctx).parse()
 
 
+def check(src: str) -> None:
+    """Raise ExprError if `src` is not a valid expression (values are not evaluated)."""
+    p = _Parser(src, {})
+    p.skipping = 1
+    p.or_()
+    if p.i != len(p.toks):
+        raise ExprError(f"unexpected {p.toks[p.i][1]!r} in {src!r}")
+
+
+def expressions(value: Any) -> list[str]:
+    """All {{...}} expressions inside a template value (recursively)."""
+    if isinstance(value, str):
+        return [m.group(1) for m in PART.finditer(value)]
+    if isinstance(value, dict):
+        return [e for v in value.values() for e in expressions(v)]
+    if isinstance(value, list):
+        return [e for v in value for e in expressions(v)]
+    return []
+
+
 WHOLE = re.compile(r"^\s*\{\{(.*?)\}\}\s*$", re.DOTALL)
 PART = re.compile(r"\{\{(.*?)\}\}", re.DOTALL)
 
