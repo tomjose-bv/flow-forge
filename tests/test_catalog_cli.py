@@ -42,3 +42,19 @@ def test_cli_eval_references(tmp_path, capsys):
 
 def test_cli_eval_missing_recipe(tmp_path):
     assert main(["eval", "--root", str(ROOT), "--task", "won_deal_chat", "--recipe-dir", str(tmp_path)]) == 1
+
+
+def test_cli_agent_with_fake_llm(tmp_path):
+    import argparse
+
+    from flow_forge.cli import cmd_agent
+    from flow_forge.llm import FakeLLM
+
+    ref = (ROOT / "recipes/reference/lost_deal_note.yaml").read_text()  # tasks run in name order
+    args = argparse.Namespace(root=str(ROOT), set="dev", task=["won_deal_chat", "lost_deal_note"], variant="prompt",
+                              model="fake", seed=1, temperature=0.0, out=str(tmp_path / "run"))
+    assert cmd_agent(args, llm=FakeLLM([f"```yaml\n{ref}```"])) == 0  # second task: model runs out -> crash
+    results = json.loads((tmp_path / "run/summary.json").read_text())["results"]
+    by_task = {r["task"]: r for r in results}
+    assert by_task["lost_deal_note"]["report"]["success"]
+    assert "agent crashed" in by_task["won_deal_chat"]["error"]

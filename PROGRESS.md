@@ -55,6 +55,12 @@
   write_recipe (versions + validation errors), dry_run (practice-run summary:
   ok/filtered/failed, errors, produced effects, replay duplicates; never the expected
   effects), submit; per-tool limits, call log. 107 tests passing.
+- M2.2 `agents.py`: contract prompt + catalog + task (reference never in prompts); `prompt`
+  (one call) and `probe` (SAMPLE/CALL lines, up to 3 inspection turns; write actions
+  blocked); AgentResult with test-world report, usage, tool log; CLI `flow-forge agent
+  --variant prompt|probe` with per-task crash isolation, result.json and summary.json
+  (machine/date/model/seed). 114 tests passing. **Milestone 2 done** (real-model smoke run
+  pending while connector-forge benchmarks use Ollama).
 
 ## Ideas for later
 
@@ -68,8 +74,8 @@ user before creating it.
 
 ## Next step
 
-Milestone 2, step 2: prompt and probe agents in `src/flow_forge/agents.py` (system prompt:
-the recipe contract + catalog + task; prompt = one call; probe = may request SAMPLE <app> /
-CALL <app.action> {json} lines for up to 3 turns, then writes the recipe), AgentResult
-(report from harness.evaluate on the test world, usage, tool log), and CLI `flow-forge agent
---variant ...` writing runs/<...>/summary.json. Tests with FakeLLM.
+Milestone 3, step 1: graph agent in agents.py: inspect turn (probe_turns) -> write ->
+[validation errors -> fix] -> dry_run -> self-check against the description -> fix, up to 4
+rounds; context kept small (contract + catalog + task + current recipe + last tool output);
+final = last valid recipe whose dry run had no failed events (else last valid). Tests with
+FakeLLM.
