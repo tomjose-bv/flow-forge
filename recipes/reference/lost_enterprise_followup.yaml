@@ -1,0 +1,13 @@
+name: lost_enterprise_followup
+trigger: {app: crm, event: deal.stage_changed, filter: "trigger.deal.stage == 'lost' and 'enterprise' in trigger.deal.tags"}
+steps:
+  - id: contact
+    action: crm.get_contact
+    inputs: {id: "{{trigger.deal.contact_id}}"}
+  - id: ticket
+    action: tickets.create_ticket
+    inputs:
+      title: "Follow up lost deal {{trigger.deal.name}}"
+      priority: high
+      requester_email: "{{steps.contact.email}}"
+      description: "Previous stage: {{trigger.previous_stage}}"

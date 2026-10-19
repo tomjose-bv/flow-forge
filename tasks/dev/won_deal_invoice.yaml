@@ -1,0 +1,19 @@
+name: won_deal_invoice
+description: 'When a deal moves to "won", create a draft invoice in billing for the deal''s contact. Find
+  the
+
+  billing customer by the contact''s email; if there is none, create the customer first (with the
+
+  contact''s name and email). The invoice uses the deal''s amount and currency, the memo
+
+  "Deal <deal name>", and the deal id as external_ref.
+
+  '
+seed: 13
+apps: [crm, billing]
+world: {contacts: 8, billing_customers: 4}
+events:
+- type: deal.stage_changed
+  count: 12
+  stages: {won: 5, lost: 4, proposal: 3}
+  currency_pool: [USD, EUR]

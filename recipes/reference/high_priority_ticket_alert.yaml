@@ -1,0 +1,6 @@
+name: high_priority_ticket_alert
+trigger: {app: tickets, event: ticket.created, filter: "trigger.priority == 'high'"}
+steps:
+  - id: post
+    action: chat.post_message
+    inputs: {channel: support, text: "High priority ticket: {{trigger.title}} from {{trigger.requester_email}}"}

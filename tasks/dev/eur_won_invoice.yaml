@@ -1,0 +1,18 @@
+name: eur_won_invoice
+description: 'Only for deals in EUR: when such a deal moves to "won", create a draft invoice for the deal''s
+
+  contact in billing, exactly as follows. Find the billing customer by the contact''s email; if there
+
+  is none, create it with the contact''s name and email. Invoice: the deal''s amount, currency EUR,
+
+  memo "Deal <deal name>", external_ref = the deal id. Deals in other currencies: do nothing.
+
+  '
+seed: 17
+apps: [crm, billing]
+world: {contacts: 8, billing_customers: 5}
+events:
+- type: deal.stage_changed
+  count: 14
+  stages: {won: 9, lost: 3, proposal: 2}
+  currency_pool: [USD, EUR, GBP]

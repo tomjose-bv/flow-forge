@@ -1,0 +1,15 @@
+name: big_win_alert
+description: 'When a deal moves to "won" and its amount is at least 5000, post to #leadership:
+
+  "Big win: <deal name> for <amount> <currency>". Smaller wins and other stages: do nothing.
+
+  '
+seed: 16
+apps: [crm, chat]
+world:
+  contacts: 8
+  channels: [sales, leadership]
+events:
+- type: deal.stage_changed
+  count: 14
+  stages: {won: 9, lost: 3, proposal: 2}

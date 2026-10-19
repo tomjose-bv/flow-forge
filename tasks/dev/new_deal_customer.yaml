@@ -1,0 +1,13 @@
+name: new_deal_customer
+description: 'When a deal is created in the CRM, make sure the deal''s contact exists as a billing customer:
+
+  look the customer up by the contact''s email and create it (contact''s name and email) only if it
+
+  does not exist. Create nothing else.
+
+  '
+seed: 21
+apps: [crm, billing]
+world: {contacts: 7, billing_customers: 3}
+events:
+- {type: deal.created, count: 9}

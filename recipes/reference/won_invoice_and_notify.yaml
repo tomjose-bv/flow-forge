@@ -1,0 +1,26 @@
+name: won_invoice_and_notify
+trigger: {app: crm, event: deal.stage_changed, filter: "trigger.deal.stage == 'won'"}
+steps:
+  - id: contact
+    action: crm.get_contact
+    inputs: {id: "{{trigger.deal.contact_id}}"}
+  - id: customer
+    action: billing.find_customer
+    inputs: {email: "{{steps.contact.email}}"}
+  - id: new_customer
+    if: "steps.customer is null"
+    action: billing.create_customer
+    inputs: {name: "{{steps.contact.name}}", email: "{{steps.contact.email}}"}
+  - id: invoice
+    action: billing.create_invoice
+    inputs:
+      customer_id: "{{steps.customer.id | default: steps.new_customer.id}}"
+      amount: "{{trigger.deal.amount}}"
+      currency: "{{trigger.deal.currency}}"
+      memo: "Deal {{trigger.deal.name}}"
+      external_ref: "{{trigger.deal.id}}"
+  - id: post
+    action: chat.post_message
+    inputs:
+      channel: billing
+      text: "Invoiced {{steps.customer.email | default: steps.new_customer.email}} {{steps.invoice.amount}} {{steps.invoice.currency}}"

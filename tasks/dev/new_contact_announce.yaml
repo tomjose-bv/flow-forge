@@ -1,0 +1,11 @@
+name: new_contact_announce
+description: 'When a new contact is created in the CRM, post to #sales: "New contact: <name> from <company>".
+
+  '
+seed: 12
+apps: [crm, chat]
+world:
+  contacts: 5
+  channels: [sales]
+events:
+- {type: contact.created, count: 7}

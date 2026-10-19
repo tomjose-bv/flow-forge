@@ -1,0 +1,6 @@
+name: lost_deal_note
+trigger: {app: crm, event: deal.stage_changed, filter: "trigger.deal.stage == 'lost'"}
+steps:
+  - id: note
+    action: crm.update_deal
+    inputs: {id: "{{trigger.deal.id}}", note: "Lost after {{trigger.previous_stage}}"}

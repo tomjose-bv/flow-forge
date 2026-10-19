@@ -1,0 +1,11 @@
+name: ticket_routing
+trigger: {app: tickets, event: ticket.created}
+steps:
+  - id: urgent
+    if: "trigger.priority == 'high'"
+    action: chat.post_message
+    inputs: {channel: urgent, text: "URGENT: {{trigger.title}}"}
+  - id: normal
+    if: "trigger.priority != 'high'"
+    action: chat.post_message
+    inputs: {channel: support, text: "New ticket: {{trigger.title}} ({{trigger.priority}})"}

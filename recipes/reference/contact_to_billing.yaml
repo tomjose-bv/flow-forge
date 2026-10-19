@@ -1,0 +1,10 @@
+name: contact_to_billing
+trigger: {app: crm, event: contact.created}
+steps:
+  - id: customer
+    action: billing.find_customer
+    inputs: {email: "{{trigger.email}}"}
+  - id: create
+    if: "steps.customer is null"
+    action: billing.create_customer
+    inputs: {name: "{{trigger.name}}", email: "{{trigger.email}}"}

@@ -1,0 +1,9 @@
+name: won_deal_tags
+trigger: {app: crm, event: deal.stage_changed, filter: "trigger.deal.stage == 'won'"}
+steps:
+  - id: each_tag
+    for_each: "trigger.deal.tags"
+    steps:
+      - id: post
+        action: chat.post_message
+        inputs: {channel: sales, text: "{{trigger.deal.name}} tagged {{item}}"}

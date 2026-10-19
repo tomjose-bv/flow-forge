@@ -1,0 +1,13 @@
+name: lost_deal_note
+description: 'When a deal moves to "lost", set the deal''s note in the CRM to "Lost after <previous stage>"
+
+  (the stage it was in before). Do not change the stage.
+
+  '
+seed: 15
+apps: [crm]
+world: {contacts: 6}
+events:
+- type: deal.stage_changed
+  count: 12
+  stages: {won: 5, lost: 4, proposal: 3}

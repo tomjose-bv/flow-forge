@@ -1,0 +1,6 @@
+name: paid_invoice_notice
+trigger: {app: billing, event: invoice.paid}
+steps:
+  - id: post
+    action: chat.post_message
+    inputs: {channel: billing, text: "Invoice {{trigger.id}} paid: {{trigger.amount}} {{trigger.currency}}"}

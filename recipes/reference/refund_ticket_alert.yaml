@@ -1,0 +1,6 @@
+name: refund_ticket_alert
+trigger: {app: tickets, event: ticket.created, filter: "'refund' in trigger.title"}
+steps:
+  - id: post
+    action: chat.post_message
+    inputs: {channel: billing, text: "Refund request: {{trigger.title}} ({{trigger.requester_email}})"}

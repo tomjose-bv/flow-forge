@@ -1,0 +1,13 @@
+name: new_deal_customer
+trigger: {app: crm, event: deal.created}
+steps:
+  - id: contact
+    action: crm.get_contact
+    inputs: {id: "{{trigger.contact_id}}"}
+  - id: customer
+    action: billing.find_customer
+    inputs: {email: "{{steps.contact.email}}"}
+  - id: new_customer
+    if: "steps.customer is null"
+    action: billing.create_customer
+    inputs: {name: "{{steps.contact.name}}", email: "{{steps.contact.email}}"}

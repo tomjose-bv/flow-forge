@@ -1,0 +1,21 @@
+name: won_invoice_and_notify
+description: 'When a deal moves to "won": create the invoice exactly as follows, then announce it. Find
+  the
+
+  billing customer by the contact''s email (create it with the contact''s name and email if missing).
+
+  Invoice: deal amount and currency, memo "Deal <deal name>", external_ref = deal id. Then post to
+
+  #billing: "Invoiced <customer email> <amount> <currency>" using the email of the billing customer.
+
+  '
+seed: 23
+apps: [crm, billing, chat]
+world:
+  contacts: 8
+  billing_customers: 4
+  channels: [sales, billing]
+events:
+- type: deal.stage_changed
+  count: 12
+  stages: {won: 5, lost: 4, proposal: 3}

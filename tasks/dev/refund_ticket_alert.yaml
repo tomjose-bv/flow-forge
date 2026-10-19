@@ -1,0 +1,13 @@
+name: refund_ticket_alert
+description: 'When a new support ticket''s title contains the word "refund", post to #billing:
+
+  "Refund request: <title> (<requester email>)". Other tickets: do nothing.
+
+  '
+seed: 26
+apps: [tickets, chat]
+world:
+  contacts: 6
+  channels: [billing]
+events:
+- {type: ticket.created, count: 16}

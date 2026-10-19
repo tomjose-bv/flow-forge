@@ -1,0 +1,6 @@
+name: new_contact_announce
+trigger: {app: crm, event: contact.created}
+steps:
+  - id: post
+    action: chat.post_message
+    inputs: {channel: sales, text: "New contact: {{trigger.name}} from {{trigger.company}}"}

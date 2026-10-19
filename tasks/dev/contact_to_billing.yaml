@@ -1,0 +1,12 @@
+name: contact_to_billing
+description: 'When a contact is created in the CRM, create a billing customer with the contact''s name
+  and
+
+  email, unless a billing customer with that email already exists.
+
+  '
+seed: 25
+apps: [crm, billing]
+world: {contacts: 5, billing_customers: 2}
+events:
+- {type: contact.created, count: 8}

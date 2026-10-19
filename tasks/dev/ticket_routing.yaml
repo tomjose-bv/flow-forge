@@ -1,0 +1,15 @@
+name: ticket_routing
+description: 'Route new support tickets to chat: high priority tickets go to #urgent as "URGENT: <title>";
+
+  all other tickets go to #support as "New ticket: <title> (<priority>)".
+
+  '
+seed: 22
+apps: [tickets, chat]
+world:
+  contacts: 6
+  channels: [urgent, support]
+events:
+- type: ticket.created
+  count: 10
+  priorities: {high: 3, normal: 5, low: 2}

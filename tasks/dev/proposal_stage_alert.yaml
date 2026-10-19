@@ -1,0 +1,16 @@
+name: proposal_stage_alert
+description: 'When a deal moves from "qualified" to "proposal", post to #sales: "<deal name> moved to
+  proposal
+
+  (owner <owner email>)". Moves from any other stage are ignored.
+
+  '
+seed: 24
+apps: [crm, chat]
+world:
+  contacts: 8
+  channels: [sales]
+events:
+- type: deal.stage_changed
+  count: 14
+  stages: {proposal: 6, won: 4, lost: 4}

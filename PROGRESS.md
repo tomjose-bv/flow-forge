@@ -36,6 +36,12 @@
   Report (valid + validation errors, success, precision, recall, duplicates on full replay,
   events ok/filtered/failed, examples of missing/unexpected effects, event errors, API
   calls). 72 tests passing.
+- M1.8 16 dev tasks in tasks/dev/ (chat alerts, filters on
+  stage/amount/currency/tags/previous stage/title, lookups with create-if-missing, invoices,
+  deal notes, tickets, for_each, if-routing, multi-app chains) with reference recipes in
+  recipes/reference/. Every reference is valid, succeeds, has no failed events or replay
+  duplicates; for filtered tasks, dropping the filter makes the recipe fail. 89 tests
+  passing.
 
 ## Ideas for later
 
@@ -49,10 +55,8 @@ user before creating it.
 
 ## Next step
 
-Milestone 1, step 8: dev tasks. Write ~16 task YAMLs in tasks/dev/ with a hand-written
-reference recipe each in recipes/reference/<task>.yaml, from simple (deal won -> chat
-message) to multi-step (lookup + create-if-missing + invoice + message; ticket priority
-routing; for_each over tags; currency filters; invoice paid -> update deal note).
-Descriptions must state every exact text/format the checks depend on. Test: every reference
-recipe is valid and evaluate(task, ref, ref).success, with expected > 0 and at least one
-filtered event where a filter exists. Start with 6 tasks.
+Milestone 1, step 9: held-out tasks, in their own commit before any agent code: 5 tasks in
+tasks/heldout/ with new combinations (e.g. paid invoice >= 1000 -> ticket + message; won
+deal in GBP/EUR -> invoice with converted memo; contact created at a given company ->
+customer + message; ticket for won enterprise deal for_each tag; lost deal -> note +
+ticket), plus reference recipes in recipes/reference/heldout/ (never shown to agents).

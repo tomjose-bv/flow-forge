@@ -1,0 +1,15 @@
+name: high_priority_ticket_alert
+description: 'When a support ticket is opened with priority "high", post to #support:
+
+  "High priority ticket: <title> from <requester email>". Ignore other priorities.
+
+  '
+seed: 14
+apps: [tickets, chat]
+world:
+  contacts: 6
+  channels: [support]
+events:
+- type: ticket.created
+  count: 10
+  priorities: {high: 4, normal: 4, low: 2}

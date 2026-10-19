@@ -1,0 +1,13 @@
+name: paid_invoice_notice
+description: 'When an invoice is paid in billing, post to #billing: "Invoice <invoice id> paid: <amount>
+  <currency>".
+
+  '
+seed: 19
+apps: [billing, chat]
+world:
+  contacts: 6
+  billing_customers: 3
+  channels: [billing]
+events:
+- {type: invoice.paid, count: 8}

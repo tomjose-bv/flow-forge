@@ -1,0 +1,6 @@
+name: big_win_alert
+trigger: {app: crm, event: deal.stage_changed, filter: "trigger.deal.stage == 'won' and trigger.deal.amount >= 5000"}
+steps:
+  - id: post
+    action: chat.post_message
+    inputs: {channel: leadership, text: "Big win: {{trigger.deal.name}} for {{trigger.deal.amount}} {{trigger.deal.currency}}"}

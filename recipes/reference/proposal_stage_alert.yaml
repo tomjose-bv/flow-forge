@@ -1,0 +1,6 @@
+name: proposal_stage_alert
+trigger: {app: crm, event: deal.stage_changed, filter: "trigger.previous_stage == 'qualified' and trigger.deal.stage == 'proposal'"}
+steps:
+  - id: post
+    action: chat.post_message
+    inputs: {channel: sales, text: "{{trigger.deal.name}} moved to proposal (owner {{trigger.deal.owner_email}})"}
