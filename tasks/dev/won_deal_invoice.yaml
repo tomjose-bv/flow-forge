@@ -17,3 +17,8 @@ events:
   count: 12
   stages: {won: 5, lost: 4, proposal: 3}
   currency_pool: [USD, EUR]
+faults:
+  billing.create_invoice:
+  - 503
+  - {status: 503, after: true}
+  crm.get_contact: [500]

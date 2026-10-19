@@ -58,6 +58,10 @@ class App:
 
     actions: dict[str, ActionSpec] = field(default_factory=dict)
     triggers: dict[str, TriggerSpec] = field(default_factory=dict)
+    # injected failures per action, consumed in order: a status (fail before running) or
+    # {"status": 503, "after": true} (the action runs, then the response is lost)
+    faults: dict[str, list[Any]] = field(default_factory=dict)
+    faults_injected: int = 0
 
     # data helpers
     def new_id(self, prefix: str) -> str:
@@ -101,10 +105,18 @@ class App:
             cached = self._idempotent.get((action, idempotency_key))
             if cached is not None:
                 return copy.deepcopy(cached)
+        fault = self.faults.get(action, []).pop(0) if self.faults.get(action) else None
+        status, after = (fault.get("status", 503), bool(fault.get("after"))) if isinstance(fault, dict) else (fault, False)
+        if fault is not None and not after:
+            self.faults_injected += 1
+            raise ActionError(status, "injected failure")
         result = getattr(self, f"do_{action}")(**inputs)
         self.action_log.append({"action": action, "inputs": copy.deepcopy(inputs), "key": idempotency_key})
         if spec.writes and idempotency_key:
             self._idempotent[(action, idempotency_key)] = copy.deepcopy(result)
+        if fault is not None:
+            self.faults_injected += 1
+            raise ActionError(status, "injected failure after the action ran")
         return copy.deepcopy(result)
 
     def _validate(self, spec: ActionSpec, inputs: Any) -> dict[str, Any]:

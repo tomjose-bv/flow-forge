@@ -51,6 +51,7 @@ class Task:
     events: tuple[dict[str, Any], ...] = ()
     ambiguous: bool = False
     clarifications: dict[str, str] = field(default_factory=dict)
+    faults: dict[str, list[Any]] = field(default_factory=dict)  # {"app.action": [503, {"status": 503, "after": true}]}
 
 
 def parse(data: Any) -> Task:
@@ -59,7 +60,8 @@ def parse(data: Any) -> Task:
     for key in ("name", "description", "seed", "apps", "events"):
         if key not in data:
             raise TaskError(f"missing required key: {key}")
-    unknown = set(data) - {"name", "description", "seed", "apps", "world", "events", "ambiguous", "clarifications"}
+    unknown = set(data) - {"name", "description", "seed", "apps", "world", "events", "ambiguous", "clarifications",
+                           "faults"}
     if unknown:
         raise TaskError(f"unknown keys: {sorted(unknown)}")
     apps = tuple(data["apps"])
@@ -72,6 +74,15 @@ def parse(data: Any) -> Task:
         needs = {"ticket": "tickets", "invoice": "billing"}.get(ev["type"].split(".")[0])
         if needs and needs not in apps:
             raise TaskError(f"events[{i}]: {ev['type']} needs the {needs} app")
+    faults = dict(data.get("faults") or {})
+    for key, plan in faults.items():
+        app_name, _, action = key.partition(".")
+        if app_name not in apps or action not in APP_CLASSES[app_name]().actions:
+            raise TaskError(f"faults: unknown action {key!r}")
+        for f in plan:
+            status = f.get("status", 503) if isinstance(f, dict) else f
+            if not (status == 429 or 500 <= int(status) < 600):
+                raise TaskError(f"faults: {key}: status must be 429 or 5xx, got {status}")
     return Task(
         name=str(data["name"]),
         description=str(data["description"]).strip(),
@@ -81,6 +92,7 @@ def parse(data: Any) -> Task:
         events=tuple(data["events"]),
         ambiguous=bool(data.get("ambiguous", False)),
         clarifications=dict(data.get("clarifications") or {}),
+        faults=faults,
     )
 
 

@@ -90,3 +90,27 @@ def test_http(apps):
 def test_new_ids_skip_hand_inserted(apps):
     c = apps["billing"].call("create_customer", {"name": "Ben", "email": "ben@example.com"})
     assert c["id"] == "cus_0002" and len(apps["billing"].all("customers")) == 2
+
+
+def test_injected_faults(apps):
+    b = apps["billing"]
+    args = {"customer_id": "cus_0001", "amount": 5, "currency": "EUR"}
+    b.faults["create_invoice"] = [503, {"status": 503, "after": True}]
+    with pytest.raises(ActionError, match="injected failure$"):
+        b.call("create_invoice", args, "k")
+    assert b.all("invoices") == []
+    with pytest.raises(ActionError, match="after the action ran"):
+        b.call("create_invoice", args, "k")
+    assert len(b.all("invoices")) == 1  # it ran; only the response was lost
+    b.call("create_invoice", args, "k")  # retry with the same key: no duplicate
+    assert len(b.all("invoices")) == 1 and b.faults_injected == 2
+
+
+def test_lost_response_without_key_duplicates(apps):
+    b = apps["billing"]
+    args = {"customer_id": "cus_0001", "amount": 5, "currency": "EUR"}
+    b.faults["create_invoice"] = [{"status": 503, "after": True}]
+    with pytest.raises(ActionError):
+        b.call("create_invoice", args)
+    b.call("create_invoice", args)
+    assert len(b.all("invoices")) == 2  # why the engine always sends idempotency keys

@@ -92,6 +92,7 @@ class Report:
     unexpected: list[str] = field(default_factory=list)  # up to 3 examples
     errors: list[str] = field(default_factory=list)  # up to 3 event errors
     api_calls: int = 0
+    faults_injected: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -101,7 +102,13 @@ def keys_for(apps: dict[str, App]) -> dict[str, str]:
     return {n: a.api_key for n, a in apps.items()}
 
 
-def run_recipe(task: Task, recipe_text: str, replay: bool = False):
+def apply_faults(task: Task, apps: dict[str, App]) -> None:
+    for key, plan in task.faults.items():
+        app_name, _, action = key.partition(".")
+        apps[app_name].faults[action] = copy.deepcopy(list(plan))
+
+
+def run_recipe(task: Task, recipe_text: str, replay: bool = False, faults: bool = False):
     """Build the task's world, run the recipe once (and optionally replay all events).
 
     Returns (apps, initial snapshot, RunLog, effects after first run, effects after replay, api calls).
@@ -109,6 +116,8 @@ def run_recipe(task: Task, recipe_text: str, replay: bool = False):
     recipe = loads(recipe_text)
     apps = build_world(task)
     initial = _snapshot(apps)
+    if faults:
+        apply_faults(task, apps)
     with AppServer(apps) as srv:
         client = Client(srv.url, keys_for(apps), sleep=lambda s: None)
         log = run(recipe, client)
@@ -133,7 +142,7 @@ def evaluate(task: Task, recipe_text: str, reference_text: str) -> Report:
         errors = [str(e)]
     if errors:
         return Report(task.name, False, errors[:10], False, 0.0, 0.0, sum(expected.values()), 0, 0, 0, 0, 0, 0)
-    _, _, log, got, replayed, calls = run_recipe(task, recipe_text, replay=True)
+    apps, _, log, got, replayed, calls = run_recipe(task, recipe_text, replay=True, faults=True)
     matched = sum((got & expected).values())
     produced, exp_n = sum(got.values()), sum(expected.values())
     return Report(
@@ -154,4 +163,5 @@ def evaluate(task: Task, recipe_text: str, reference_text: str) -> Report:
         unexpected=[_fmt(e) for e in list((got - expected).elements())[:3]],
         errors=[f"event {e.event_id}: {e.error}" for e in log.events if e.error][:3],
         api_calls=calls,
+        faults_injected=sum(a.faults_injected for a in apps.values()),
     )

@@ -67,6 +67,8 @@ class AppServer:
         h.send_response(status)
         h.send_header("Content-Type", "application/json")
         h.send_header("Content-Length", str(len(payload)))
+        if status == 429:
+            h.send_header("Retry-After", "1")
         h.end_headers()
         h.wfile.write(payload)
 

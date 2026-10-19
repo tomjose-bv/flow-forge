@@ -70,3 +70,15 @@ def test_duplicates_on_replay_without_idempotent_lookup():
     r = evaluate(TASK, bad, REF)
     assert not r.success
     assert r.events_failed > 0 or r.duplicates_on_replay > 0
+
+
+def test_reference_survives_faults():
+    import dataclasses
+
+    faulty = dataclasses.replace(TASK, faults={
+        "billing.create_invoice": [503, {"status": 503, "after": True}, 429],
+        "billing.create_customer": [{"status": 502, "after": True}],
+        "crm.get_contact": [500],
+    })
+    r = evaluate(faulty, REF, REF)
+    assert r.success and r.duplicates_on_replay == 0 and r.faults_injected == 5

@@ -66,6 +66,12 @@
   duplicates) the model self-checks the produced effects against the description and replies
   DONE or a fix; best recipe kept (fewest failures/duplicates, latest on ties). CLI
   `--variant graph`. 117 tests passing.
+- **Milestone 3 done** (graph). M4.1 Fault injection: App.faults per action (status before
+  running, or {status, after: true} = action runs but the response is lost); 429 responses
+  carry Retry-After; tasks get `faults`; harness runs candidates with faults (reference
+  effects computed without) and reports faults_injected. Lost-response retries reuse the
+  idempotency key, so no duplicates; without a key they duplicate (tested). Faults added to
+  3 dev tasks; references still perfect. 120 tests passing.
 
 ## Ideas for later
 
@@ -79,7 +85,9 @@ user before creating it.
 
 ## Next step
 
-Milestone 4, step 1: failure injection. Apps get fail_plan: {action: [status, ...]} consumed
-per call (e.g. 503, 503 -> success; 429 with Retry-After), and tasks get optional `faults`.
-Harness reports correctness under faults (effects must still match, no duplicates from
-retries). Reference recipes must still be perfect with faults on. Tests.
+Milestone 4, step 2: ambiguous tasks + graph+clarify. Add 4 ambiguous dev tasks (e.g. 'tell
+the team about big wins' - threshold, channel and text unspecified) with `ambiguous: true`
+and scripted `clarifications` {keyword regex: answer}; reference recipes follow the answers.
+ScriptedUser answers QUESTION lines by keyword (else 'Use your judgment'); graph+clarify
+asks up to 3 questions before the graph loop; AgentResult.questions counted. Tests with
+FakeLLM.

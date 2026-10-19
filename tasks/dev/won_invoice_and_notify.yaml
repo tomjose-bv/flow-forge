@@ -19,3 +19,7 @@ events:
 - type: deal.stage_changed
   count: 12
   stages: {won: 5, lost: 4, proposal: 3}
+faults:
+  billing.create_customer:
+  - {status: 502, after: true}
+  chat.post_message: [429, 503]

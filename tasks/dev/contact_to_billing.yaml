@@ -10,3 +10,8 @@ apps: [crm, billing]
 world: {contacts: 5, billing_customers: 2}
 events:
 - {type: contact.created, count: 8}
+faults:
+  billing.create_customer:
+  - {status: 503, after: true}
+  - 503
+  billing.find_customer: [429]
