@@ -85,3 +85,8 @@ def test_http(apps):
         assert a == b and len(apps["billing"].all("invoices")) == 1
         assert http(f"{u}/nope/events", key="x")[0] == 404
         assert len(srv.log) == 8
+
+
+def test_new_ids_skip_hand_inserted(apps):
+    c = apps["billing"].call("create_customer", {"name": "Ben", "email": "ben@example.com"})
+    assert c["id"] == "cus_0002" and len(apps["billing"].all("customers")) == 2

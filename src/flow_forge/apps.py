@@ -61,9 +61,15 @@ class App:
 
     # data helpers
     def new_id(self, prefix: str) -> str:
-        n = self._counters.get(prefix, 0) + 1
-        self._counters[prefix] = n
-        return f"{prefix}_{n:04d}"
+        """Next unused id with this prefix (skips ids inserted by hand)."""
+        used = {k for objs in self.collections.values() for k in objs}
+        n = self._counters.get(prefix, 0)
+        while True:
+            n += 1
+            candidate = f"{prefix}_{n:04d}"
+            if candidate not in used:
+                self._counters[prefix] = n
+                return candidate
 
     def insert(self, collection: str, obj: dict[str, Any]) -> dict[str, Any]:
         self.collections.setdefault(collection, {})[obj["id"]] = obj

@@ -20,6 +20,12 @@
   app/event/action/input, missing required inputs, literal types and enums, duplicate ids,
   references to undefined/later steps, item/index outside loops, expression syntax
   (expr.check). 51 tests passing.
+- M1.5 `engine.py`: HTTP Client (X-Api-Key, Idempotency-Key, retries 429/5xx/connection
+  errors with backoff or Retry-After) and run(): polls the trigger app from a cursor,
+  ignores other event types, filter, if/skip (null output), for_each with item/index and
+  per-iteration keys, key = <recipe>:<event>:<step path>; failures recorded per event and
+  the run continues. Fixed app id collisions with hand-inserted ids (found by the replay
+  test). 58 tests passing.
 
 ## Ideas for later
 
@@ -33,9 +39,8 @@ user before creating it.
 
 ## Next step
 
-Milestone 1, step 5: engine. `src/flow_forge/engine.py`: run a recipe against apps over HTTP
-(AppServer): poll the trigger app's events feed from a cursor, apply filter, run steps in
-order with context (trigger, event, steps, item/index), skipped steps output null,
-Idempotency-Key = <recipe>:<event id>:<step path>, retry 429/5xx with backoff (max 3), stop
-the event on 4xx and record the error. Returns a RunLog (per event: status
-ok/filtered/failed, step calls, errors) and the new cursor. Tests with AppServer.
+Milestone 1, step 6: task format + world generator. `src/flow_forge/task.py`: task YAML
+{name, description (plain English), apps, seed, world: counts of
+contacts/deals/customers/channels..., events: generated stream spec (e.g. 12
+deal.stage_changed with stage mix), ambiguous: bool}; build_world(task) -> apps populated
+deterministically from the seed + event stream. Tests: determinism, counts.
