@@ -26,6 +26,11 @@
   per-iteration keys, key = <recipe>:<event>:<step path>; failures recorded per event and
   the run continues. Fixed app id collisions with hand-inserted ids (found by the replay
   test). 58 tests passing.
+- M1.6 `task.py`: task YAML (description, apps, seed, world sizes, event stream specs with
+  stage/priority/currency mixes, ambiguous flag, scripted clarifications) and build_world():
+  deterministic contacts, billing customers (some with differently-cased emails), channels,
+  tickets, and deal/contact/ticket/invoice event streams with increasing timestamps. 66
+  tests passing.
 
 ## Ideas for later
 
@@ -39,8 +44,10 @@ user before creating it.
 
 ## Next step
 
-Milestone 1, step 6: task format + world generator. `src/flow_forge/task.py`: task YAML
-{name, description (plain English), apps, seed, world: counts of
-contacts/deals/customers/channels..., events: generated stream spec (e.g. 12
-deal.stage_changed with stage mix), ambiguous: bool}; build_world(task) -> apps populated
-deterministically from the seed + event stream. Tests: determinism, counts.
+Milestone 1, step 7: harness. `src/flow_forge/harness.py`: effects(apps, initial) =
+canonical created/changed objects per app (ids replaced by natural keys: customers by email,
+invoices by (customer email, external_ref, amount, currency, memo), messages by (channel,
+text), tickets by (title, priority, requester), deal changes by (deal id, stage, note));
+evaluate(task, recipe_text): build world twice, run reference and candidate recipes via
+AppServer+engine, compare effects -> precision, recall, success, duplicates after a replay,
+failed/filtered event counts, validation errors. Tests with an inline reference recipe.
