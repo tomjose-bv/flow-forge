@@ -5,6 +5,11 @@
 - Plan written (PLAN.md). Local repo created with personal git identity.
 - M1.1 Project skeleton: pyproject, src layout, scripts/setup.py (.venv), MIT license,
   README stub, smoke tests. 2 tests passing.
+- M1.2 Mock apps: `apps.py` (App base with collections, events feed, declarative
+  ActionSpec/TriggerSpec, input validation with clear 400/404/409 errors, idempotency keys,
+  action log) + crm, billing, chat, tickets; `server.py` AppServer (POST
+  /<app>/actions/<name>, GET /<app>/events?after=, X-Api-Key, Idempotency-Key, request log).
+  6 tests passing.
 
 ## Ideas for later
 
@@ -18,9 +23,8 @@ user before creating it.
 
 ## Next step
 
-Milestone 1, step 2: mock apps. `src/flow_forge/apps.py`: an in-memory App base (objects per
-collection, append-only events list with ids, action handlers, idempotency-key cache) and 4
-apps: crm (deals, contacts; events deal.created/deal.updated/deal.won), billing (customers,
-invoices; create_invoice, find_customer), chat (channels, post_message), tickets
-(create_ticket, find_ticket). One stdlib HTTP server exposing POST /<app>/actions/<name>,
-GET /<app>/events?after=<id>, API-key auth per app, request log. Tests with urllib.
+Milestone 1, step 3: expression language. `src/flow_forge/expr.py`: render templates like
+'Deal {{trigger.deal.name}} won' and whole-value refs '{{steps.find.id}}' (keeps type),
+dotted paths into a context dict, a few safe filters (upper, lower, default:x, round:n,
+number); conditions: comparisons (== != > >= < <=), and/or/not, in, is null, literals. Own
+tokenizer + parser, no eval. Clear errors for unknown paths. Tests.
