@@ -1,0 +1,13 @@
+name: big_loss_escalation
+trigger: {app: crm, event: deal.stage_changed, filter: "trigger.deal.stage == 'lost' and trigger.deal.amount >= 3000"}
+steps:
+  - id: note
+    action: crm.update_deal
+    inputs: {id: "{{trigger.deal.id}}", note: Escalated}
+  - id: ticket
+    action: tickets.create_ticket
+    inputs:
+      title: "Win back {{trigger.deal.name}}"
+      priority: high
+      requester_email: "{{trigger.deal.owner_email}}"
+      description: "Lost after {{trigger.previous_stage}}"

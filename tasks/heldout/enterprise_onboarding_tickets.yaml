@@ -1,0 +1,15 @@
+name: enterprise_onboarding_tickets
+description: 'When a deal tagged "enterprise" moves to "won", open one support ticket per tag of the deal:
+
+  title "Onboard <deal name>: <tag>", priority normal, requester = the email of the deal''s contact
+
+  (look it up in the CRM).
+
+  '
+seed: 104
+apps: [crm, tickets]
+world: {contacts: 8}
+events:
+- type: deal.stage_changed
+  count: 18
+  stages: {won: 12, lost: 4, proposal: 2}

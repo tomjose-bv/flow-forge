@@ -1,0 +1,13 @@
+name: northwind_contact_customer
+trigger: {app: crm, event: contact.created, filter: "trigger.company == 'Northwind'"}
+steps:
+  - id: customer
+    action: billing.find_customer
+    inputs: {email: "{{trigger.email}}"}
+  - id: create
+    if: "steps.customer is null"
+    action: billing.create_customer
+    inputs: {name: "{{trigger.name}}", email: "{{trigger.email}}"}
+  - id: post
+    action: chat.post_message
+    inputs: {channel: sales, text: "Northwind contact: {{trigger.name}}"}

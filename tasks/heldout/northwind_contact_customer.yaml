@@ -1,0 +1,17 @@
+name: northwind_contact_customer
+description: 'When a contact from the company "Northwind" is created in the CRM, create a billing customer
+  with
+
+  the contact''s name and email unless one with that email exists, and post to #sales:
+
+  "Northwind contact: <name>". Contacts from other companies: do nothing.
+
+  '
+seed: 103
+apps: [crm, billing, chat]
+world:
+  contacts: 6
+  billing_customers: 2
+  channels: [sales]
+events:
+- {type: contact.created, count: 20}

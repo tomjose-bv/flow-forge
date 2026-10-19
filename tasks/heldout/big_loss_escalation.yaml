@@ -1,0 +1,15 @@
+name: big_loss_escalation
+description: 'When a deal with an amount of at least 3000 moves to "lost": set its CRM note to "Escalated",
+
+  then open a high priority ticket titled "Win back <deal name>" with the deal owner''s email as
+
+  requester and description "Lost after <previous stage>".
+
+  '
+seed: 105
+apps: [crm, tickets]
+world: {contacts: 8}
+events:
+- type: deal.stage_changed
+  count: 18
+  stages: {won: 4, lost: 12, proposal: 2}

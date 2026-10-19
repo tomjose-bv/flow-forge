@@ -1,0 +1,21 @@
+name: gbp_won_invoice_alert
+description: 'For deals in GBP that move to "won": find the billing customer by the deal contact''s email
+
+  (create it with the contact''s name and email if missing), create an invoice with the deal''s amount,
+
+  currency GBP, memo "Deal <deal name>" and external_ref = deal id, then post to #sales:
+
+  "GBP invoice <invoice id> for <deal name>". Other currencies and stages: do nothing.
+
+  '
+seed: 102
+apps: [crm, billing, chat]
+world:
+  contacts: 8
+  billing_customers: 3
+  channels: [sales]
+events:
+- type: deal.stage_changed
+  count: 16
+  stages: {won: 10, lost: 4, proposal: 2}
+  currency_pool: [USD, GBP, EUR]

@@ -42,6 +42,9 @@
   recipes/reference/. Every reference is valid, succeeds, has no failed events or replay
   duplicates; for filtered tasks, dropping the filter makes the recipe fail. 89 tests
   passing.
+- M1.9 5 held-out tasks in tasks/heldout/ with reference recipes in
+  recipes/reference/heldout/ (never shown to agents), committed before any agent code. All
+  references perfect; filters discriminate. 94 tests passing.
 
 ## Ideas for later
 
@@ -55,8 +58,9 @@ user before creating it.
 
 ## Next step
 
-Milestone 1, step 9: held-out tasks, in their own commit before any agent code: 5 tasks in
-tasks/heldout/ with new combinations (e.g. paid invoice >= 1000 -> ticket + message; won
-deal in GBP/EUR -> invoice with converted memo; contact created at a given company ->
-customer + message; ticket for won enterprise deal for_each tag; lost deal -> note +
-ticket), plus reference recipes in recipes/reference/heldout/ (never shown to agents).
+Milestone 1, step 10 (last of M1): app catalog + CLI. `src/flow_forge/catalog.py` renders
+Markdown docs of the task's apps from ActionSpec/TriggerSpec (triggers + data shape, actions
++ inputs/types/enums/required + output, recipe format and expression cheat sheet) - the only
+app info agents get; CLI `flow-forge eval --set dev|heldout [--task X] [--recipe-dir DIR]
+[--out f.json]` scoring a directory of recipes against the references. Then employer-terms
+checks; mark milestone 1 done.

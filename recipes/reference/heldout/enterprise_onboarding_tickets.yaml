@@ -1,0 +1,15 @@
+name: enterprise_onboarding_tickets
+trigger: {app: crm, event: deal.stage_changed, filter: "trigger.deal.stage == 'won' and 'enterprise' in trigger.deal.tags"}
+steps:
+  - id: contact
+    action: crm.get_contact
+    inputs: {id: "{{trigger.deal.contact_id}}"}
+  - id: each_tag
+    for_each: "trigger.deal.tags"
+    steps:
+      - id: ticket
+        action: tickets.create_ticket
+        inputs:
+          title: "Onboard {{trigger.deal.name}}: {{item}}"
+          priority: normal
+          requester_email: "{{steps.contact.email}}"

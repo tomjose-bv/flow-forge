@@ -1,0 +1,16 @@
+name: large_payment_followup
+description: 'When an invoice is paid and its amount is at least 1000, do two things: open a support ticket
+
+  titled "Thank customer <customer id>" with priority low and requester finance@example.com, and post
+
+  to #billing: "Large payment: <invoice id> <amount> <currency>". Smaller payments: do nothing.
+
+  '
+seed: 101
+apps: [billing, tickets, chat]
+world:
+  contacts: 8
+  billing_customers: 4
+  channels: [billing]
+events:
+- {type: invoice.paid, count: 14}

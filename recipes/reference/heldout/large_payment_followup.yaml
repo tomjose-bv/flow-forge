@@ -1,0 +1,9 @@
+name: large_payment_followup
+trigger: {app: billing, event: invoice.paid, filter: "trigger.amount >= 1000"}
+steps:
+  - id: ticket
+    action: tickets.create_ticket
+    inputs: {title: "Thank customer {{trigger.customer_id}}", priority: low, requester_email: finance@example.com}
+  - id: post
+    action: chat.post_message
+    inputs: {channel: billing, text: "Large payment: {{trigger.id}} {{trigger.amount}} {{trigger.currency}}"}
