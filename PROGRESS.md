@@ -10,6 +10,11 @@
   action log) + crm, billing, chat, tickets; `server.py` AppServer (POST
   /<app>/actions/<name>, GET /<app>/events?after=, X-Api-Key, Idempotency-Key, request log).
   6 tests passing.
+- M1.3 `expr.py`: own tokenizer/parser (no eval): dotted paths and [i], literals, lists,
+  comparisons, and/or/not with short-circuit, in / not in, is [not] null, filters (upper,
+  lower, trim, default, round, number, integer, string, length); render() for templates
+  (whole-value refs keep type) and condition(). Unknown paths fail loudly unless defaulted
+  or null-tested. 33 tests passing.
 
 ## Ideas for later
 
@@ -23,8 +28,9 @@ user before creating it.
 
 ## Next step
 
-Milestone 1, step 3: expression language. `src/flow_forge/expr.py`: render templates like
-'Deal {{trigger.deal.name}} won' and whole-value refs '{{steps.find.id}}' (keeps type),
-dotted paths into a context dict, a few safe filters (upper, lower, default:x, round:n,
-number); conditions: comparisons (== != > >= < <=), and/or/not, in, is null, literals. Own
-tokenizer + parser, no eval. Clear errors for unknown paths. Tests.
+Milestone 1, step 4: recipe format + validation. `src/flow_forge/recipe.py`: load YAML
+recipe {name, trigger: {app, event, filter?}, steps: [{id, action: app.name, inputs, if?} |
+{id, for_each: expr, steps: [...]} ] }; validate() against the apps' TriggerSpec/ActionSpec
+(unknown app/action/event, unknown or missing required inputs, duplicate step ids,
+references to later or unknown steps, expression syntax) returning a list of readable
+errors. Tests.
