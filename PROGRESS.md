@@ -49,6 +49,12 @@
   inputs/types/enums, object shapes, recipe format + expression cheat sheet; no reference
   recipes) and CLI `flow-forge eval` / `flow-forge catalog`. Employer-terms checks clean
   (tree + history). 99 tests passing. **Milestone 1 done.**
+- M2.1 `llm.py` (OllamaClient with reply cap, FakeLLM, extract_recipe) and `tools.py`
+  ToolBox: practice world = task seed + 1000 (agents never see test events); read_task,
+  read_catalog, sample_events, call_readonly (write actions blocked by the guard),
+  write_recipe (versions + validation errors), dry_run (practice-run summary:
+  ok/filtered/failed, errors, produced effects, replay duplicates; never the expected
+  effects), submit; per-tool limits, call log. 107 tests passing.
 
 ## Ideas for later
 
@@ -62,10 +68,8 @@ user before creating it.
 
 ## Next step
 
-Milestone 2, step 1: LLM client (copy the pattern from connector-forge llm.py: OllamaClient,
-FakeLLM, extract a ```yaml block) and agent tools behind a guard: ToolBox(task) with
-read_task, read_catalog, sample_events(app, n) (from a probe world built with a different
-seed, so agents never see the test events), call_readonly(app.action, inputs) (non-writing
-actions only), write_recipe(yaml) (parse + validate, return errors), dry_run() (evaluate
-against the reference on the probe world? NO: run on the probe world and return the run log
-only, not the expected effects), submit. Per-tool limits, every call logged.
+Milestone 2, step 2: prompt and probe agents in `src/flow_forge/agents.py` (system prompt:
+the recipe contract + catalog + task; prompt = one call; probe = may request SAMPLE <app> /
+CALL <app.action> {json} lines for up to 3 turns, then writes the recipe), AgentResult
+(report from harness.evaluate on the test world, usage, tool log), and CLI `flow-forge agent
+--variant ...` writing runs/<...>/summary.json. Tests with FakeLLM.
