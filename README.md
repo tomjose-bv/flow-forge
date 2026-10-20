@@ -8,9 +8,10 @@ Everything runs on one machine: Ollama for the model, standard-library mock apps
 
 Most workflow tools show that a recipe ran. This project measures whether it did what was asked.
 
-**Status:** milestones 1 and 2 of 5 done: mock apps, recipe format, expression language, engine,
-tasks, evaluation harness, reference recipes, guarded agent tools and the first two AI agents
-(`prompt` and `probe`). The self-checking agent comes next (see [Roadmap](#roadmap)).
+**Status:** milestones 1–3 of 5 done: mock apps, recipe format, expression language, engine,
+tasks, evaluation harness, reference recipes, guarded agent tools and three AI agents including
+`graph`, which dry-runs its recipe and checks the effects against the description itself.
+Failure injection and clarifying questions come next (see [Roadmap](#roadmap)).
 
 ## How it works
 
@@ -51,6 +52,7 @@ makes the recipe fail, so the tasks tell careless recipes from correct ones.
 | `reference` | hand-written recipes, no model; proves the harness (all perfect) |
 | `prompt` | one model call from the task and the app catalog |
 | `probe` | may look at sample events and call read-only actions first |
+| `graph` | inspect → write → validate → dry run → self-check → fix, up to 4 rounds |
 
 Agents work on a **practice world** (same task, different seed), so they never see the test
 events. Their tools: `read_task`, `read_catalog`, `sample_events`, `call_readonly`,
@@ -97,7 +99,7 @@ machine, date, model and seed. Benchmark results come with milestone 5.
 
 1. ~~Mock apps, catalog, recipe format, expression language, engine, tasks, harness, reference recipes.~~
 2. ~~Guard, agent tools, LLM client, `prompt` and `probe` agents.~~
-3. The `graph` agent with validate → dry run → fix.
+3. ~~The `graph` agent with validate → dry run → fix.~~
 4. Fault injection, ambiguous tasks and an agent that asks clarifying questions.
 5. Runs over three seeds, results in this README, CI, v0.1.0 release.
 
