@@ -8,10 +8,10 @@ Everything runs on one machine: Ollama for the model, standard-library mock apps
 
 Most workflow tools show that a recipe ran. This project measures whether it did what was asked.
 
-**Status:** milestones 1–3 of 5 done: mock apps, recipe format, expression language, engine,
-tasks, evaluation harness, reference recipes, guarded agent tools and three AI agents including
-`graph`, which dry-runs its recipe and checks the effects against the description itself.
-Failure injection and clarifying questions come next (see [Roadmap](#roadmap)).
+**Status:** milestones 1–4 of 5 built: mock apps, recipe format, expression language, engine,
+tasks with failure injection and ambiguous descriptions, evaluation harness, reference recipes,
+guarded agent tools and four AI agents, including one that asks clarifying questions. Benchmark
+results come with milestone 5 (see [Roadmap](#roadmap)).
 
 ## How it works
 
@@ -32,15 +32,20 @@ task YAML ──► mock apps (crm, billing, chat, tickets) on localhost
   (`expr.py`, its own parser, no `eval`): `{{trigger.deal.amount}}`, `steps.customer is null`,
   `'enterprise' in trigger.deal.tags`, `| default: ...`.
 - **Engine** (`engine.py`): polls the trigger app, applies the filter, runs the steps, retries 429
-  and 5xx responses, and sends an idempotency key per (event, step) so replays never duplicate
-  side effects.
-- **Tasks** (`tasks/`): a description, the apps, and a seeded world and event stream. 16
-  development tasks and 5 held-out tasks, each with a hand-written reference recipe.
+  and 5xx responses, and sends an idempotency key per (event, step) so replays and lost
+  responses never duplicate side effects.
+- **Fault injection**: apps can fail an action before it runs (503, 429 with Retry-After) or
+  after it runs with the response lost, which is the case that creates duplicates without
+  idempotency keys. Recipes are scored with the task's faults switched on.
+- **Tasks** (`tasks/`): a description, the apps, and a seeded world and event stream. 20
+  development tasks (4 deliberately ambiguous, 3 with injected faults) and 5 held-out tasks,
+  each with a hand-written reference recipe. Ambiguous tasks come with scripted answers to
+  clarifying questions.
 - **Harness** (`harness.py`): runs a candidate recipe and the reference on identical worlds and
   compares side effects in a canonical form (generated ids replaced by natural keys), then
   replays every event to count duplicates.
 - **App catalog** (`catalog.py`): Markdown docs of the apps' triggers, actions and objects plus
-  the recipe format. It will be all the agents get about the apps.
+  the recipe format. It is all the agents get about the apps.
 
 Every reference recipe scores perfectly, and for every task with a filter, dropping the filter
 makes the recipe fail, so the tasks tell careless recipes from correct ones.
@@ -53,6 +58,7 @@ makes the recipe fail, so the tasks tell careless recipes from correct ones.
 | `prompt` | one model call from the task and the app catalog |
 | `probe` | may look at sample events and call read-only actions first |
 | `graph` | inspect → write → validate → dry run → self-check → fix, up to 4 rounds |
+| `graph+clarify` | `graph`, but first may ask a scripted user up to 3 questions |
 
 Agents work on a **practice world** (same task, different seed), so they never see the test
 events. Their tools: `read_task`, `read_catalog`, `sample_events`, `call_readonly`,
@@ -65,10 +71,11 @@ tool, blocks write actions outside recipes and logs every call. The model is
 
 | metric | meaning |
 |---|---|
-| success | exactly the expected side effects on the test world, no failed events, no replay duplicates |
+| success | exactly the expected side effects on the test world, with injected faults, no failed events, no replay duplicates |
 | precision / recall | share of produced effects that were expected / of expected effects that were produced |
 | valid | the recipe passed static validation |
 | replay duplicates | extra effects after replaying every event |
+| questions | clarifying questions asked, on clear and on ambiguous tasks |
 | rounds, tokens, seconds, blocked calls | cost and guard activity |
 
 ## Setup
@@ -100,7 +107,7 @@ machine, date, model and seed. Benchmark results come with milestone 5.
 1. ~~Mock apps, catalog, recipe format, expression language, engine, tasks, harness, reference recipes.~~
 2. ~~Guard, agent tools, LLM client, `prompt` and `probe` agents.~~
 3. ~~The `graph` agent with validate → dry run → fix.~~
-4. Fault injection, ambiguous tasks and an agent that asks clarifying questions.
+4. ~~Fault injection, ambiguous tasks and an agent that asks clarifying questions.~~
 5. Runs over three seeds, results in this README, CI, v0.1.0 release.
 
 ## License
