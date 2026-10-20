@@ -8,8 +8,9 @@ Everything runs on one machine: Ollama for the model, standard-library mock apps
 
 Most workflow tools show that a recipe ran. This project measures whether it did what was asked.
 
-**Status:** milestone 1 of 5 done: mock apps, recipe format, expression language, engine, tasks,
-evaluation harness and reference recipes. The AI agents come next (see [Roadmap](#roadmap)).
+**Status:** milestones 1 and 2 of 5 done: mock apps, recipe format, expression language, engine,
+tasks, evaluation harness, reference recipes, guarded agent tools and the first two AI agents
+(`prompt` and `probe`). The self-checking agent comes next (see [Roadmap](#roadmap)).
 
 ## How it works
 
@@ -17,8 +18,8 @@ evaluation harness and reference recipes. The AI agents come next (see [Roadmap]
 task YAML ──► mock apps (crm, billing, chat, tickets) on localhost
     │              ▲            │ events feed (triggers)
     ▼              │ actions    ▼
- description     recipe ──► engine
-                                │
+ description ──► agent (Ollama) ── tools ──► guard ──► recipe ──► engine
+ + app catalog                                                      │
           harness: events → engine → app state → compare with the reference recipe's effects
 ```
 
@@ -43,6 +44,31 @@ task YAML ──► mock apps (crm, billing, chat, tickets) on localhost
 Every reference recipe scores perfectly, and for every task with a filter, dropping the filter
 makes the recipe fail, so the tasks tell careless recipes from correct ones.
 
+## Agents
+
+| variant | what it does |
+|---|---|
+| `reference` | hand-written recipes, no model; proves the harness (all perfect) |
+| `prompt` | one model call from the task and the app catalog |
+| `probe` | may look at sample events and call read-only actions first |
+
+Agents work on a **practice world** (same task, different seed), so they never see the test
+events. Their tools: `read_task`, `read_catalog`, `sample_events`, `call_readonly`,
+`write_recipe` (returns validation errors), `dry_run` (what the recipe did on the practice
+world: effects and errors, never the expected effects) and `submit`. A guard limits calls per
+tool, blocks write actions outside recipes and logs every call. The model is
+`qwen2.5-coder:3b` via Ollama on localhost; nothing leaves the machine.
+
+## Metrics
+
+| metric | meaning |
+|---|---|
+| success | exactly the expected side effects on the test world, no failed events, no replay duplicates |
+| precision / recall | share of produced effects that were expected / of expected effects that were produced |
+| valid | the recipe passed static validation |
+| replay duplicates | extra effects after replaying every event |
+| rounds, tokens, seconds, blocked calls | cost and guard activity |
+
 ## Setup
 
 Requires Python 3.12.
@@ -58,10 +84,19 @@ python scripts/setup.py
 .venv\Scripts\flow-forge catalog tasks/dev/won_deal_invoice.yaml     # what an agent will see
 ```
 
+Run an agent (needs [Ollama](https://ollama.com) and `ollama pull qwen2.5-coder:3b`):
+
+```
+.venv\Scripts\flow-forge agent --variant probe --set dev --task won_deal_invoice
+```
+
+Each run directory keeps every recipe version and a `result.json`; `summary.json` records the
+machine, date, model and seed. Benchmark results come with milestone 5.
+
 ## Roadmap
 
 1. ~~Mock apps, catalog, recipe format, expression language, engine, tasks, harness, reference recipes.~~
-2. Guard, agent tools, LLM client, `prompt` and `probe` agents (Ollama, `qwen2.5-coder:3b`).
+2. ~~Guard, agent tools, LLM client, `prompt` and `probe` agents.~~
 3. The `graph` agent with validate → dry run → fix.
 4. Fault injection, ambiguous tasks and an agent that asks clarifying questions.
 5. Runs over three seeds, results in this README, CI, v0.1.0 release.
