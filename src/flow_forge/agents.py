@@ -171,13 +171,50 @@ def _rank(dry_run: str) -> tuple[int, int]:
     return (int(m.group(1)) if m else 99, int(d.group(1)) if d else 0)
 
 
-def run_graph(task: Task, llm: LLM, run_dir: Path, reference: str, rounds: int = 4, n: int = 4) -> AgentResult:
-    """Fixed plan: inspect -> write -> (validate -> dry run -> self-check -> fix) x rounds."""
+QUESTION_LINE = re.compile(r"^\s*QUESTION:\s*(.+?)\s*$", re.MULTILINE | re.IGNORECASE)
+CLARIFY_PROMPT = """Before building anything, decide whether the task says everything you need: which events
+to react to (thresholds, stages, companies, priorities), which channel or app to use, and the exact
+text of any message, title, note or memo. If something is missing, ask the user up to {k}
+questions, one per line, as
+QUESTION: <your question>
+If the task is fully specified, reply only READY."""
+
+COMPLETE = "The description is complete; follow it exactly."
+JUDGMENT = "I have nothing to add; use your judgment."
+
+
+class ScriptedUser:
+    """Answers clarifying questions from the task's scripted clarifications (regex -> answer)."""
+
+    def __init__(self, task: Task):
+        self.task = task
+        self.asked: list[tuple[str, str]] = []
+
+    def answer(self, question: str) -> str:
+        if not self.task.ambiguous:
+            reply = COMPLETE
+        else:
+            reply = next((a for pat, a in self.task.clarifications.items() if re.search(pat, question, re.IGNORECASE)),
+                         JUDGMENT)
+        self.asked.append((question, reply))
+        return reply
+
+
+def run_graph(task: Task, llm: LLM, run_dir: Path, reference: str, rounds: int = 4, n: int = 4,
+              clarify: bool = False, max_questions: int = 3) -> AgentResult:
+    """Fixed plan: [clarify ->] inspect -> write -> (validate -> dry run -> self-check -> fix) x rounds."""
     started = time.monotonic()
     limits = {"read_task": 1, "read_catalog": 1, "sample_events": n, "call_readonly": n,
               "write_recipe": rounds + 1, "dry_run": rounds + 1, "submit": 1}
     tb = ToolBox(task, run_dir, limits=limits)
     context = _context(tb)
+    user = ScriptedUser(task)
+    if clarify:
+        reply = llm.chat(_messages(CONTRACT, context + "\n\n" + CLARIFY_PROMPT.format(k=max_questions)))
+        for q in QUESTION_LINE.findall(reply)[:max_questions]:
+            user.answer(q)
+        if user.asked:
+            context += "\n\nClarifications from the user:\n" + "\n".join(f"Q: {q}\nA: {a}" for q, a in user.asked)
     messages = _messages(CONTRACT + "\n\n" + PROBE_HELP.replace("{n}", str(n)),
                          context + "\n\nInspect if useful, then write the recipe.")
     reply = probe_turns(tb, llm, messages, max_turns=2, n=n)
@@ -209,7 +246,12 @@ def run_graph(task: Task, llm: LLM, run_dir: Path, reference: str, rounds: int =
         tb.recipe_path.write_text(best[2], encoding="utf-8")
     elif not tb.recipe_path.exists():
         error = "no recipe was written"
-    return _finish("graph", task, llm, tb, started, used, reference, error=error)
+    return _finish("graph+clarify" if clarify else "graph", task, llm, tb, started, used, reference, error=error,
+                   questions=len(user.asked))
 
 
-AGENTS = {"prompt": run_prompt, "probe": run_probe, "graph": run_graph}
+def run_graph_clarify(task: Task, llm: LLM, run_dir: Path, reference: str, **kw) -> AgentResult:
+    return run_graph(task, llm, run_dir, reference, clarify=True, **kw)
+
+
+AGENTS = {"prompt": run_prompt, "probe": run_probe, "graph": run_graph, "graph+clarify": run_graph_clarify}

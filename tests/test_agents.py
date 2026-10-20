@@ -78,3 +78,43 @@ def test_graph_without_any_recipe(tmp_path):
 
     r = run_graph(TASK, FakeLLM(["hmm"] * 10), tmp_path, REF, rounds=2)
     assert r.report is None and r.error == "no recipe was written"
+
+
+AMBIG = load(ROOT / "tasks/dev/big_wins_shoutout.yaml")
+AMBIG_REF = reference_text(AMBIG, "dev")
+
+
+def test_scripted_user():
+    from flow_forge.agents import COMPLETE, JUDGMENT, ScriptedUser
+
+    u = ScriptedUser(AMBIG)
+    assert "8000" in u.answer("How big is a big deal, what amount?")
+    assert "#wins" in u.answer("Which channel should I post in?")
+    assert u.answer("What is your favourite colour?") == JUDGMENT
+    assert ScriptedUser(TASK).answer("Which channel?") == COMPLETE
+
+
+def test_graph_clarify_uses_answers(tmp_path):
+    from flow_forge.agents import run_graph_clarify
+
+    questions = "QUESTION: What amount counts as big?\nQUESTION: Which channel?\nQUESTION: What text exactly?"
+    llm = FakeLLM([questions, f"```yaml\n{AMBIG_REF}```", "DONE"])
+    r = run_graph_clarify(AMBIG, llm, tmp_path, AMBIG_REF)
+    assert r.variant == "graph+clarify" and r.questions == 3 and r.report["success"]
+    ctx = llm.seen[1][1]["content"]
+    assert "Clarifications from the user" in ctx and "8000" in ctx and "We won <deal name>!" in ctx
+
+
+def test_graph_clarify_ready_asks_nothing(tmp_path):
+    from flow_forge.agents import run_graph_clarify
+
+    r = run_graph_clarify(TASK, FakeLLM(["READY", FENCED, "DONE"]), tmp_path, REF)
+    assert r.questions == 0 and r.report["success"]
+
+
+def test_question_limit(tmp_path):
+    from flow_forge.agents import run_graph_clarify
+
+    many = "\n".join(f"QUESTION: q{i} amount?" for i in range(6))
+    r = run_graph_clarify(AMBIG, FakeLLM([many, f"```yaml\n{AMBIG_REF}```", "DONE"]), tmp_path, AMBIG_REF)
+    assert r.questions == 3

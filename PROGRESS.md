@@ -75,6 +75,11 @@
 - M4.2a 4 ambiguous dev tasks (big_wins_shoutout, vip_ticket_escalation, lost_deal_cleanup,
   key_account_billing_sync) with `ambiguous: true` and scripted `clarifications` {keyword
   regex: answer}; reference recipes follow the answers and are perfect. 20 dev tasks total.
+- M4.2b ScriptedUser (regex keyword answers from task.clarifications; 'use your judgment'
+  when nothing matches; 'description is complete' for clear tasks) and `graph+clarify`: one
+  clarify turn (up to 3 QUESTION lines or READY), answers added to the context, then the
+  graph loop; questions counted in AgentResult. CLI variant. **Milestone 4 done.** 128 tests
+  passing.
 
 ## Ideas for later
 
@@ -88,9 +93,9 @@ user before creating it.
 
 ## Next step
 
-Milestone 4, step 2b: ScriptedUser (answers QUESTION lines by regex keyword match on
-task.clarifications; else 'The description is all there is; use your judgment.'; for non-
-ambiguous tasks: 'The description is complete; follow it exactly.') and `graph+clarify`
-agent: one turn asking up to 3 questions (or READY), answers appended to the context, then
-the graph loop (add an `extra` context parameter to run_graph). AgentResult.questions. CLI
-variant. Tests with FakeLLM. Then milestone 5 (README, CI, run script, report, real runs).
+Milestone 5, step 1: `flow-forge report` (aggregate runs/*/summary.json: success rate,
+precision, recall, valid rate, replay duplicates, failed events, questions (split
+ambiguous/clear tasks), rounds, tokens, seconds; mean and min-max over seeds;
+machine/date/model footer) + `scripts/run_all.py` (copy connector-forge's: resumable, keeps
+Windows awake), CI workflow, README update. Real runs only after connector-forge's benchmark
+is done (both use Ollama).
